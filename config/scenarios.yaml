@@ -1,0 +1,64 @@
+# Scenario definitions for energy-ops-agent.
+# SERVER-SIDE CONFIG — cannot be changed via chat or LLM (invariant 3).
+# Scenario enum values are the canonical keys; free-text queries are mapped to the
+# closest enum in the intent node.
+# Version: 1.0
+
+scenarios:
+  HIGH_PRICE:
+    description: Forecast prices scaled up by 20 %
+    price_multiplier: 1.20
+    notes: >
+      Simulates higher-than-expected demand, supply shortage, or grid stress.
+      Applied uniformly to all forecast hours.
+
+  LOW_PRICE:
+    description: Forecast prices scaled down by 20 %
+    price_multiplier: 0.80
+    notes: >
+      Simulates lower-than-expected demand, excess supply, or renewable overproduction.
+      Applied uniformly to all forecast hours.
+
+  HIGH_RENEWABLE:
+    description: >
+      Renewable generation assumption increased by 30 %, reducing prices via elasticity.
+    renewable_multiplier: 1.30
+    # Elasticity: fitted by OLS from price_history + renewable_generation when real data exists.
+    # Until then, use elasticity_default and label the result "assumed" in the response.
+    elasticity_default_inr_per_mw: -2.5   # INR/MWh per additional MW of renewable
+    notes: >
+      When real data is available, run OLS: Δprice ~ Δrenewable_generation.
+      With sample data, apply elasticity_default and mark output as 'assumed elasticity'.
+
+  FORECAST_ERROR:
+    description: >
+      Bootstrap hour-of-day residuals from historical forecast errors; 200 draws.
+    bootstrap_draws: 200
+    bootstrap_seed: 7
+    output:
+      - p10_profit_inr
+      - p50_profit_inr
+      - p90_profit_inr
+      - regret_impact_inr
+    notes: >
+      Stress-tests the plan against forecast uncertainty.
+      Residuals are sampled per-hour-of-day (preserves intra-day correlation structure).
+
+  HIGH_VOLATILITY:
+    description: >
+      Scale each hour's deviation from the day's mean price by 1.5 ×
+      (amplifies highs and lows without changing the mean).
+    volatility_multiplier: 1.5
+    notes: >
+      p_t_scenario = mean_price + (p_t_forecast - mean_price) * 1.5
+      This preserves daily average; extreme hours get more extreme.
+
+# ── Mapping hints for intent node ─────────────────────────────────────────────
+# When a user's free-text request is ambiguous, map to the closest enum and
+# state in the response which scenario was used. Examples:
+#   "prices 20% higher"          → HIGH_PRICE
+#   "prices drop 20%"            → LOW_PRICE
+#   "lots of solar tomorrow"     → HIGH_RENEWABLE
+#   "my forecast might be wrong" → FORECAST_ERROR
+#   "price spike at 8pm"         → HIGH_VOLATILITY  (or HIGH_PRICE if spike wording)
+#   "more volatile day"          → HIGH_VOLATILITY

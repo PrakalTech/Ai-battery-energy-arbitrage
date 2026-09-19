@@ -1,0 +1,4 @@
+site_id,timestamp,soc_pct,operating_status,available_power_mw,cycles_today,temperature_c,active_alarms
+S001,2026-09-18 23:00:00,72.0,idle,25.0,0.6,31.5,0
+S002,2026-09-18 23:00:00,41.0,idle,12.5,0.4,29.2,0
+S003,2026-09-18 23:00:00,58.0,idle,50.0,0.8,33.1,0

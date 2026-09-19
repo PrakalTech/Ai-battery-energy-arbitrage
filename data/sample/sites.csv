@@ -1,0 +1,4 @@
+site_id,site_name,location,market_zone,status,capacity_mwh,power_mw,round_trip_efficiency,soc_min_pct,soc_max_pct,reserve_soc_pct,max_daily_discharge_mwh,degradation_cost_inr_per_mwh,initial_soc_pct
+S001,Chennai Coastal BESS (sample),Tamil Nadu,SR,active,100.0,25.0,0.88,10.0,90.0,20.0,200.0,600.0,50.0
+S002,Bengaluru East BESS (sample),Karnataka,SR,active,50.0,12.5,0.87,10.0,90.0,20.0,100.0,650.0,50.0
+S003,Pune West BESS (sample),Maharashtra,WR,active,200.0,50.0,0.86,10.0,90.0,15.0,400.0,550.0,50.0

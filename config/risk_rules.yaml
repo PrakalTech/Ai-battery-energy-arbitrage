@@ -1,0 +1,63 @@
+# Risk rule thresholds for energy-ops-agent.
+# SERVER-SIDE CONFIG — cannot be changed via chat or LLM (invariant 3).
+# Edit this file directly (under version control) to update operational rules.
+# Version: 1.0
+
+# ── Cycling limits ────────────────────────────────────────────────────────────
+cycling:
+  max_daily_cycles: 1.5          # equivalent cycles per day (throughput / capacity)
+  warn_threshold_pct: 90.0       # raise cycling warning when >= 90 % of max_daily_cycles
+
+# ── Forecast-uncertainty thresholds (MAE % of mean actual price) ──────────────
+forecast_uncertainty:
+  low_threshold_pct: 10.0        # MAE % < 10  → Low
+  medium_threshold_pct: 20.0     # MAE % < 20  → Medium; >= 20 → High
+
+# ── SOC policy ───────────────────────────────────────────────────────────────
+soc:
+  enforce_reserve: true          # reserve_soc_pct is a hard floor (not a soft target)
+
+# ── Power policy ─────────────────────────────────────────────────────────────
+power:
+  enforce_limits: true           # power_mw is a hard ceiling per hour
+
+# ── Per-check definitions (name, type, description) ──────────────────────────
+# type: hard = any failure → risk_level = High
+#       soft = failure → risk_level at least Medium
+checks:
+  - name: soc_min
+    type: hard
+    description: SOC must stay ≥ soc_min_pct × capacity at every hour.
+
+  - name: reserve_soc
+    type: hard
+    description: SOC must stay ≥ reserve_soc_pct × capacity at every hour (hard floor).
+
+  - name: soc_max
+    type: hard
+    description: SOC must stay ≤ soc_max_pct × capacity at every hour.
+
+  - name: power_limit
+    type: hard
+    description: Charge and discharge power must not exceed power_mw at any hour.
+
+  - name: no_simultaneous
+    type: hard
+    description: charge_mw and discharge_mw must not both be > 0 in the same hour.
+
+  - name: daily_throughput
+    type: hard
+    description: Total daily discharge must not exceed max_daily_discharge_mwh.
+
+  - name: cycling
+    type: soft
+    description: >
+      Equivalent daily cycles (throughput / capacity) should not exceed
+      90 % of max_daily_cycles (1.5 cycles/day = 1.35 warn threshold).
+
+  - name: forecast_uncertainty
+    type: soft
+    description: >
+      Historical forecast MAE % drives uncertainty level:
+      Low < 10 %, Medium 10–20 %, High > 20 %.
+      Medium uncertainty → risk at least Medium; High → risk High.
